@@ -1,2 +1,2 @@
 # ffparaim_amber
-Derivation of non-bonded non-polarizable force field parameters from Atom in Molecule properties.
+Derivation of non-bonded non-polarizable force field parameters from Atom in Molecule properties. Compatibility with Amber and Gromacs topologies. Legacy code.
