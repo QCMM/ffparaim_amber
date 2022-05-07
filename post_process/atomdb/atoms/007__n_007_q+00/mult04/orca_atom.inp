@@ -1,0 +1,12 @@
+! UKS B3LYP def2-TZVP Grid4 TightSCF NOFINALGRID KeepDens
+%output PrintLevel Mini Print[ P_Mulliken ] 1 Print[P_AtCharges_M] 1 end
+%pal nprocs 4 end
+%coords
+    CTyp xyz
+    Charge 0
+    Mult 4
+    Units Angs
+    coords
+        N 0.0 0.0 0.0
+    end
+end
