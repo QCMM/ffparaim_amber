@@ -9,6 +9,7 @@ import parmed as pmd
 
 from ffparaim_amber.ffderiv import ForceFieldDerivation
 from ffparaim_amber.orcaff import OrcaForceField
+from ffparaim_amber.restraints import get_ligand_atom_list
 from ffparaim_amber import stats
 from ffparaim_amber import io
 from ffparaim_amber import utils
@@ -19,8 +20,16 @@ from iodata import IOData
 class FFparAIM(object):
     """docstring for ffparaim."""
 
-    def __init__(self, top_file, coords_file, qm_charge=0, ligand_selection=':1', receptor_selection=None,
-                 n_charge_updates=3, sampling_time=25, total_qm_calculations=100, method='B3LYP',
+    def __init__(self,
+                 top_file,
+                 coords_file,
+                 qm_charge=0,
+                 ligand_selection=':1',
+                 receptor_selection=None,
+                 n_updates=3,
+                 sampling_time=25,
+                 total_qm_calculations=100,
+                 method='B3LYP',
                  basis='def2-TZVP'):
 
         self.top_file = top_file
@@ -28,9 +37,12 @@ class FFparAIM(object):
         self.qm_charge = qm_charge  # total qm charge
         # residue index for molecule to calculate charges
         self.ligand_selection = ligand_selection
+        self.ligand_atom_list = get_ligand_atom_list(self.top_file,
+                                                     self.coords_file,
+                                                     self.ligand_selection)
         if receptor_selection is not None:
             self.receptor_selection = receptor_selection
-        self.n_charge_updates = n_charge_updates
+        self.n_updates = n_updates
         self.sampling_time = sampling_time  # sampling time in ns
         self.total_qm_calculations = total_qm_calculations
         self.method = method
@@ -44,7 +56,8 @@ class FFparAIM(object):
             self.coords = app.gromacsgrofile.GromacsGroFile(self.coords_file)
             self.box_vectors = self.coords.getPeriodicBoxVectors()
             self.top = app.gromacstopfile.GromacsTopFile(
-                self.top_file, periodicBoxVectors=self.box_vectors, includeDir=self._gromacs_top_path)
+                self.top_file, periodicBoxVectors=self.box_vectors,
+                includeDir=self._gromacs_top_path)
         elif self.top_file.endswith('.prmtop'):
             self.top_format = 'amber'
             self.coords = app.amberinpcrdfile.AmberInpcrdFile(self.coords_file)
@@ -54,7 +67,7 @@ class FFparAIM(object):
             raise Exception(
                 'Topology not implemented ...')
 
-    def run(self, compl=False, output=True, json=False):
+    def run(self, restraint_dict=None, output=True, json=False):
 
         begin_time = time.time()
         mm_time = 0
@@ -64,32 +77,27 @@ class FFparAIM(object):
         part_time = 0
         # create topology file backup
         shutil.copyfile(self.top_file, f'{self.top_file}.old')
-        # apply restraints for complex simulations
-        if compl:
-            print('Setting restraints ...')
-            restraint = True
-            ligand_atom_list, receptor_atom_list = mdt.set_restrained_atoms(
-                self.top_file, self.coords_file, self.ligand_selection, self.receptor_selection)
-        else:
-            restraint = False
-            ligand_atom_list = None
-            receptor_atom_list = None
         # get box info
         b_vectors = self.box_vectors if self.top_format is 'amber' else None
-        for update in range(self.n_charge_updates):
+        for update in range(self.n_updates):
             # list to store charges and polarization energies for each update
             self.data[update] = list()
             # creating OpenMM simulation class
             if update == 0:
                 positions = self.coords.positions
             simulation, system = mdt.setup_simulation(
-                self.top, positions, update, b_vectors, restraint, ligand_atom_list, receptor_atom_list)
+                self.top,
+                positions,
+                update,
+                b_vectors,
+                restraint_dict,
+                self.ligand_atom_list)
             # write Orca forcefield file
             ff = OrcaForceField(self.top_file, self.coords_file)
             prms = ff.parse_prms()
             ff.write_prmsfile(prms)
             qm_calculations = int(
-                self.total_qm_calculations / self.n_charge_updates) * (update + 1)
+                self.total_qm_calculations / self.n_updates) * (update + 1)
             # starting loop to calculate atomic charges from different conformations
             for i in range(qm_calculations):
                 step = int(self.sampling_time * 500000 / qm_calculations)
@@ -154,10 +162,10 @@ class FFparAIM(object):
         print(f'Total time: {round(total_time, 2)} hours')
         return
 
-    def validation(self, parm=None, parm_vals=[], overwrite=False, compl=False):
+    def validation(self, parm=None, parm_vals=[], overwrite=False, restraint=None):
 
         parm_opt = ['sampling_time',
-                    'n_charge_updates',
+                    'n_updates',
                     'total_qm_calculations',
                     'method',
                     'basis']
@@ -167,7 +175,7 @@ class FFparAIM(object):
             raise Exception(
                 '''Usage:
                         parm: str ('sampling_time',
-                        'n_charge_updates',
+                        'n_updates',
                         'total_qm_calculations',
                         'method',
                         'basis')
@@ -183,10 +191,10 @@ class FFparAIM(object):
             elif parm == 'basis':
                 self.basis = str(val)
             else:
-                self.n_charge_updates = int(val)
+                self.n_updates = int(val)
             parm_dir = f'{parm[0]}_{val}'
             io.create_parm_dir(self.top_file, self.coords_file, parm_dir, overwrite)
             os.chdir(parm_dir)
-            self.run(compl)
+            self.run(restraint)
             os.chdir('..')
         return

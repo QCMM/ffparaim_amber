@@ -24,7 +24,7 @@ def write_qmmm_pdb(lig_list, pdb_file='output_recenter.pdb'):
     for atom in pdb.atoms:
         atom.bfactor = 0
         atom.occupancy = 1.0 if atom.idx in lig_list else 0
-    pdb.write_pdb('output_qmmm.pdb')
+    pdb.write_pdb('output_qmmm.pdb', increase_tercount=False)
 
 
 def write_orca_input(orca_inp, ligand_selection=None, pdb_file="output_recenter.pdb", method='B3LYP',
