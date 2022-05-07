@@ -162,7 +162,7 @@ class FFparAIM(object):
         print(f'Total time: {round(total_time, 2)} hours')
         return
 
-    def validation(self, parm=None, parm_vals=[], overwrite=False, restraint=None):
+    def validation(self, parm=None, parm_vals=[], overwrite=False, restraint_dict=None):
 
         parm_opt = ['sampling_time',
                     'n_updates',
@@ -195,6 +195,6 @@ class FFparAIM(object):
             parm_dir = f'{parm[0]}_{val}'
             io.create_parm_dir(self.top_file, self.coords_file, parm_dir, overwrite)
             os.chdir(parm_dir)
-            self.run(restraint)
+            self.run(restraint_dict)
             os.chdir('..')
         return
