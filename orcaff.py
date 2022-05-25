@@ -2,7 +2,7 @@
 import parmed as pmd
 
 from string import Template
-from ffparaim_amber import utils
+import utils
 
 
 class OrcaForceField(object):

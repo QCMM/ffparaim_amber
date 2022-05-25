@@ -5,7 +5,7 @@ import shutil
 import json
 import attr
 
-from ffparaim_amber import stats
+import stats
 
 
 def create_output_files(charges_file='charges.out', epol_file='epol.out'):
