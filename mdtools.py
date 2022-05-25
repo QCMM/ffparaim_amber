@@ -5,7 +5,7 @@ import sys
 
 import parmed as pmd
 
-from ffparaim_amber.restraints import set_restraints
+from restraints import set_restraints
 from parmed.tools import change
 
 from simtk.openmm import openmm

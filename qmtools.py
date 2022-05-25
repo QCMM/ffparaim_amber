@@ -7,7 +7,7 @@ import subprocess as sp
 
 from parmed.formats.pdb import PDBFile
 from string import Template
-from ffparaim_amber import utils
+import utils
 
 
 def set_qm_atoms(ligand_selection, pdb_file='output_recenter.pdb'):

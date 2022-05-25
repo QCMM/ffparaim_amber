@@ -1,2 +1,3 @@
 # __init__.py
-from ffparaim_amber.ffparaim import FFparAIM
+
+from .ffparaim_amber import *

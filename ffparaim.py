@@ -3,16 +3,16 @@ import time
 import os
 import shutil
 
-import ffparaim_amber.mdtools as mdt
-import ffparaim_amber.qmtools as qmt
+import mdtools as mdt
+import qmtools as qmt
 import parmed as pmd
 
-from ffparaim_amber.ffderiv import ForceFieldDerivation
-from ffparaim_amber.orcaff import OrcaForceField
-from ffparaim_amber.restraints import get_ligand_atom_list
-from ffparaim_amber import stats
-from ffparaim_amber import io
-from ffparaim_amber import utils
+from ffderiv import ForceFieldDerivation
+from orcaff import OrcaForceField
+from restraints import get_ligand_atom_list
+import stats
+import out
+import utils
 from simtk.openmm import app
 from iodata import IOData
 
@@ -146,9 +146,9 @@ class FFparAIM(object):
             self.top = mdt.make_new_top(
                 self.top_file, self.box_vectors, new_charges, self.ligand_selection)
         if output:
-            io.write_output(self.data)
+            out.write_output(self.data)
         if json:
-            io.write_json(self.data)
+            out.write_json(self.data)
         end_time = time.time()
         total_time = utils.get_time(begin_time, end_time)
         extras_time = total_time - (mm_time + qm_time + deriv_time)
@@ -193,7 +193,7 @@ class FFparAIM(object):
             else:
                 self.n_updates = int(val)
             parm_dir = f'{parm[0]}_{val}'
-            io.create_parm_dir(self.top_file, self.coords_file, parm_dir, overwrite)
+            out.create_parm_dir(self.top_file, self.coords_file, parm_dir, overwrite)
             os.chdir(parm_dir)
             self.run(restraint_dict)
             os.chdir('..')

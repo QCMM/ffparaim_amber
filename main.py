@@ -2,7 +2,7 @@
 
 import sys
 
-from ffparaim_amber import FFparAIM
+from ffparaim import FFparAIM
 
 top_file = sys.argv[1]
 coords_file = sys.argv[2]
